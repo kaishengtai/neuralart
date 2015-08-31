@@ -39,9 +39,13 @@ The Eiffel Tower in the style of Van Gogh's *Starry Night*:
 
 ![](examples/starry_eiffel_short.gif)
 
+[Longer animation](http://gfycat.com/UnawareUnfortunateEkaltadeta)
+
 And in the style of Edvard Munch's *The Scream*:
 
 ![](examples/eiffel_scream_short.gif)
+
+[Longer animation](http://gfycat.com/WebbedValuableGreyhounddog)
 
 Half Dome in the style of a Chinese painting:
 
@@ -49,11 +53,15 @@ Half Dome in the style of a Chinese painting:
 
 ![](examples/chinese_halfdome.jpg)
 
+[Animation](http://gfycat.com/DiscreteSnivelingCod)
+
 Stephen Colbert in the style of the Mona Lisa:
 
 ![](examples/colbert.jpg)
 
 ![](examples/monalisa-colbert.jpg)
+
+[Animation](http://gfycat.com/GiddyWeirdFlycatcher)
 
 ## Implementation Details
 
