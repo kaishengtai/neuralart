@@ -23,9 +23,12 @@ cmd:text()
 cmd:text('A Neural Algorithm of Artistic Style')
 cmd:text()
 cmd:text('Options:')
-cmd:option('-style',   'none', 'Path to style image')
-cmd:option('-content', 'none', 'Path to content image')
-cmd:option('-style_factor', 5e9, 'Trade-off factor between style and content')
+cmd:option('--style',       'none',  'Path to style image')
+cmd:option('--content',     'none',  'Path to content image')
+cmd:option('--style_factor', 5e9,    'Trade-off factor between style and content')
+cmd:option('--num_iters',    500,    'Number of iterations')
+cmd:option('--init',        'image', '{image, random}. Initialization mode for optimized image.')
+cmd:option('--backend',     'cunn',  '{cunn, cudnn}. Neural network CUDA backend.')
 local opt = cmd:parse(arg)
 
 local euclidean = nn.MSECriterion()
@@ -90,7 +93,7 @@ function content_grad(gen, orig)
 end
 
 -- load model
-local model = create_model('inception_caffe.th')
+local model = create_model('inception_caffe.th', opt.backend)
 collectgarbage()
 
 local style_layers = {
@@ -164,13 +167,17 @@ local optim_state = {
     dampening = 0.0,
 }
 
-local input = img
-
--- generate from noise
---local input = torch.randn(1, 3, img:size(3), img:size(4)):cuda()
+-- optimized image
+local input
+if opt.init == 'image' then
+    input = img
+elseif opt.init == 'random' then
+    input = torch.randn(1, 3, img:size(3), img:size(4)):cuda()
+else
+    error('unrecognized initialization option: ' .. opt.init)
+end
 
 -- optimize
-local num_iters = 500
 local timer = torch.Timer()
 local output = depreprocess(input):double()
 image.display(output)
@@ -180,7 +187,7 @@ if not paths.dirp(frames_dir) then
     paths.mkdir(frames_dir)
 end
 image.save(paths.concat(frames_dir, '0.jpg'), output)
-for i = 1, num_iters do
+for i = 1, opt.num_iters do
     local _, loss = optim.sgd(opfunc, input, optim_state)
     loss = loss[1]
     if i % 200 == 0 then

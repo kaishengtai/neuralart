@@ -17,13 +17,21 @@ luarocks install inn
 
 ## Usage
 
+Basic usage:
+
 ```
-qlua main.lua -style <style.jpg> -content <content.jpg> -style_factor <factor>
+qlua main.lua --style <style.jpg> --content <content.jpg> --style_factor <factor>
 ```
 
 where `style.jpg` is the image that provides the style of the final generated image, and `content.jpg` is the image that provides the content. `style_factor` is a constant that controls the degree to which the generated image emphasizes style over content. By default it is set to 5E9.
 
 The optimization of the generated image is performed on GPU. On a 2014 MacBook Pro with an NVIDIA GeForce GT 750M, it takes a little over 4 minutes to perform 500 iterations of gradient descent.
+
+Other options:
+
+- `num_iters`: Number of optimization steps.
+- `init`: {image, random}. Initialization mode for optimized image. `image` initializes with the content image; `random` initializes with random Gaussian noise.
+- `backend`: {cunn, cudnn}. Neural network CUDA backend. `cudnn` requires the [Torch bindings](https://github.com/soumith/cudnn.torch/tree/R3) for CuDNN R3.
 
 ## Examples
 

@@ -30,23 +30,22 @@ function nn.Sequential:subnetwork(name)
     return subnet
 end
 
-function create_model(weights_file)
+function create_model(weights_file, backend)
 
     local nnlib
     local lrn  -- local response normalization module
-    pcall(function() require 'cudnn' end)
-    if false then
-    -- if package.loaded['cudnn'] then
-
-    -- out of memory error on my 2014 MBP, uncomment if you have more GPU memory
+    if backend == 'cudnn' then
+        require 'cudnn'
         print('using cudnn backend')
         nnlib = cudnn
         lrn = cudnn.SpatialCrossMapLRN
-    else
+    elseif backend == 'cunn' then
         require 'inn'
         print('Using cunn backend')
         nnlib = nn
         lrn = inn.SpatialCrossResponseNormalization
+    else
+        error('unrecognized backend: ' .. backend)
     end
 
     local function inception(name, input_size, config)
