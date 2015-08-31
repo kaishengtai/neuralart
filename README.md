@@ -61,5 +61,5 @@ By default, the optimized image is initialized using the content image; the impl
 
 ## Acknowledgements
 
-The weights for the Inception network used in this implementation were ported to Torch from the publicly-available [https://github.com/BVLC/caffe/tree/master/models/bvlc_googlenet](Caffe) distribution.
+The weights for the Inception network used in this implementation were ported to Torch from the publicly-available [Caffe](https://github.com/BVLC/caffe/tree/master/models/bvlc_googlenet) distribution.
 

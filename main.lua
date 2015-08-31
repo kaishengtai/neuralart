@@ -174,7 +174,12 @@ local num_iters = 500
 local timer = torch.Timer()
 local output = depreprocess(input):double()
 image.display(output)
-image.save('frames/0.jpg', output)
+
+local frames_dir = 'frames'
+if not paths.dirp(frames_dir) then
+    paths.mkdir(frames_dir)
+end
+image.save(paths.concat(frames_dir, '0.jpg'), output)
 for i = 1, num_iters do
     local _, loss = optim.sgd(opfunc, input, optim_state)
     loss = loss[1]
@@ -190,7 +195,7 @@ for i = 1, num_iters do
     if i <= 20 or i % 5 == 0 then
         output = depreprocess(input):double()
         if i % 50 == 0 then image.display(output) end
-        image.save('frames/' .. i .. '.jpg', output)
+        image.save(paths.concat(frames_dir, i .. '.jpg'), output)
     end
 end
 output = depreprocess(input)
