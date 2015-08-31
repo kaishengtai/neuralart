@@ -27,7 +27,7 @@ The optimization of the generated image is performed on GPU. On a 2014 MacBook P
 
 ## Examples
 
-The eiffel tower in the style of Van Gogh's *Starry Night*:
+The Eiffel Tower in the style of Van Gogh's *Starry Night*:
 
 ![](examples/starry_eiffel_short.gif)
 
