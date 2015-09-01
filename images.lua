@@ -5,6 +5,15 @@
 local means = { 104, 117, 123 }
 
 function preprocess(img, scale)
+    -- handle monochrome images
+    if img:size(1) == 1 then
+        local copy = torch.FloatTensor(3, img:size(2), img:size(3))
+        copy[1] = img[1]
+        copy[2] = img[1]
+        copy[3] = img[1]
+        img = copy
+    end
+
     local w, h = img:size(3), img:size(2)
     if scale then
         if w < h then
