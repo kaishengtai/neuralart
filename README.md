@@ -30,6 +30,8 @@ The optimization of the generated image is performed on GPU. On a 2014 MacBook P
 Other options:
 
 - `num_iters`: Number of optimization steps.
+- `size`: Long edge dimension of the generated image. Set to 0 to use the size of the content image.
+- `nodisplay`: Suppress image display during optimization.
 - `init`: {image, random}. Initialization mode for optimized image. `image` initializes with the content image; `random` initializes with random Gaussian noise.
 - `backend`: {cunn, cudnn}. Neural network CUDA backend. `cudnn` requires the [Torch bindings](https://github.com/soumith/cudnn.torch/tree/R3) for CuDNN R3.
 

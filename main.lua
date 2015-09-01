@@ -27,14 +27,20 @@ cmd:option('--style',       'none',  'Path to style image')
 cmd:option('--content',     'none',  'Path to content image')
 cmd:option('--style_factor', 5e9,    'Trade-off factor between style and content')
 cmd:option('--num_iters',    500,    'Number of iterations')
+cmd:option('--size',         500,    'Length of image long edge (0 to use original content size)')
+cmd:option('--nodisplay',    false,  'Whether to skip image display during optimization')
 cmd:option('--init',        'image', '{image, random}. Initialization mode for optimized image.')
 cmd:option('--backend',     'cunn',  '{cunn, cudnn}. Neural network CUDA backend.')
 local opt = cmd:parse(arg)
+if opt.size <= 0 then
+    opt.size = nil
+end
 
 local euclidean = nn.MSECriterion()
 euclidean.sizeAverage = false
 euclidean:cuda()
 
+-- compute the Gramian matrix for input
 function gram(input)
     local k = input:size(2)
     local flat = input:view(k, -1)
@@ -71,6 +77,8 @@ function style_grad(gen, orig_gram)
     local loss = euclidean:forward(gen_gram_flat, orig_gram)
     local grad = euclidean:backward(gen_gram_flat, orig_gram)
                           :view(gen_gram:size())
+
+    -- normalization helps improve the appearance of the generated image
     local norm = torch.abs(grad):mean() * size_sq
     if norm > 0 then
         loss = loss / norm
@@ -118,14 +126,15 @@ for i, name in ipairs(style_layers) do style_index[name] = true end
 for i, name in ipairs(content_layers) do content_index[name] = true end
 
 
--- load reference images
-local art = preprocess(image.load(opt.style)):cuda()
-model:forward(art)
-local _, art_grams = collect_activations(model, {}, style_index)
-
-local img = preprocess(image.load(opt.content)):cuda()
+-- load content image
+local img = preprocess(image.load(opt.content), opt.size):cuda()
 model:forward(img)
 local img_activations, _ = collect_activations(model, content_index, {})
+
+-- load style image
+local art = preprocess(image.load(opt.style), math.max(img:size(3), img:size(4))):cuda()
+model:forward(art)
+local _, art_grams = collect_activations(model, {}, style_index)
 
 function opfunc(input)
 
@@ -180,8 +189,11 @@ end
 -- optimize
 local timer = torch.Timer()
 local output = depreprocess(input):double()
-image.display(output)
+if not opt.nodisplay then
+    image.display(output)
+end
 
+-- make directory to save intermediate frames
 local frames_dir = 'frames'
 if not paths.dirp(frames_dir) then
     paths.mkdir(frames_dir)
@@ -201,9 +213,14 @@ for i = 1, opt.num_iters do
 
     if i <= 20 or i % 5 == 0 then
         output = depreprocess(input):double()
-        if i % 50 == 0 then image.display(output) end
+        if not opt.nodisplay and i % 50 == 0 then
+            image.display(output)
+        end
         image.save(paths.concat(frames_dir, i .. '.jpg'), output)
     end
 end
+
 output = depreprocess(input)
-image.display(output)
+if not opt.nodisplay then
+    image.display(output)
+end

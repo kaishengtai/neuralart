@@ -41,7 +41,7 @@ function create_model(weights_file, backend)
         lrn = cudnn.SpatialCrossMapLRN
     elseif backend == 'cunn' then
         require 'inn'
-        print('Using cunn backend')
+        print('using cunn backend')
         nnlib = nn
         lrn = inn.SpatialCrossResponseNormalization
     else

@@ -3,14 +3,15 @@
 --
 
 local means = { 104, 117, 123 }
-local long_edge = 500
 
-function preprocess(img)
+function preprocess(img, scale)
     local w, h = img:size(3), img:size(2)
-    if w < h then
-        img = image.scale(img, long_edge * w / h, long_edge)
-    else
-        img = image.scale(img, long_edge, long_edge * h / w)
+    if scale then
+        if w < h then
+            img = image.scale(img, scale * w / h, scale)
+        else
+            img = image.scale(img, scale, scale * h / w)
+        end
     end
 
     local copy = torch.Tensor(img:size())
