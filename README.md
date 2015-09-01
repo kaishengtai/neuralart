@@ -74,7 +74,7 @@ The outputs of the following layers are used to optimize for style: `conv1/7x7_s
 
 The outputs of the following layers are used to optimize for content: `inception_3a`, `inception_4a`.
 
-Optimization of the generated image is performed using SGD with momentum of 0.9. The learning rate is decayed exponentially by 0.9 every 200 iterations.
+Optimization of the generated image is performed using gradient descent with momentum of 0.9. The learning rate is decayed exponentially by 0.75 every 100 iterations.
 
 By default, the optimized image is initialized using the content image; the implementation also works with white noise initialization, as described in the paper.
 
