@@ -29,6 +29,7 @@ cmd:option('--style_factor', 5e9,    'Trade-off factor between style and content
 cmd:option('--num_iters',    500,    'Number of iterations')
 cmd:option('--size',         500,    'Length of image long edge (0 to use original content size)')
 cmd:option('--nodisplay',    false,  'Whether to skip image display during optimization')
+cmd:option('--smoothness',   7.5e-3, 'Total variation norm regularization strength (higher for smoother output)')
 cmd:option('--init',        'image', '{image, random}. Initialization mode for optimized image.')
 cmd:option('--backend',     'cunn',  '{cunn, cudnn}. Neural network CUDA backend.')
 local opt = cmd:parse(arg)
@@ -100,6 +101,17 @@ function content_grad(gen, orig)
     return loss, grad
 end
 
+-- total variation gradient
+function total_var_grad(gen)
+    local x_diff = gen[{{}, {}, {1, -2}, {1, -2}}] - gen[{{}, {}, {1, -2}, {2, -1}}]
+    local y_diff = gen[{{}, {}, {1, -2}, {1, -2}}] - gen[{{}, {}, {2, -1}, {1, -2}}]
+    local grad = gen.new():resize(gen:size()):zero()
+    grad[{{}, {}, {1, -2}, {1, -2}}]:add(x_diff):add(y_diff)
+    grad[{{}, {}, {1, -2}, {2, -1}}]:add(-1, x_diff)
+    grad[{{}, {}, {2, -1} ,{1, -2}}]:add(-1, y_diff)
+    return grad
+end
+
 -- load model
 local model = create_model('inception_caffe.th', opt.backend)
 collectgarbage()
@@ -167,6 +179,8 @@ function opfunc(input)
         grad = module:backward(module_input, grad)
     end
 
+    -- total variation regularization for denoising
+    grad:add(total_var_grad(input):mul(opt.smoothness))
     return loss, grad
 end
 
@@ -181,7 +195,9 @@ local input
 if opt.init == 'image' then
     input = img
 elseif opt.init == 'random' then
-    input = torch.randn(1, 3, img:size(3), img:size(4)):cuda()
+    input = preprocess(
+        torch.randn(3, img:size(3), img:size(4)):mul(0.1):add(0.5):clamp(0, 1)
+    ):cuda()
 else
     error('unrecognized initialization option: ' .. opt.init)
 end
@@ -202,8 +218,8 @@ image.save(paths.concat(frames_dir, '0.jpg'), output)
 for i = 1, opt.num_iters do
     local _, loss = optim.sgd(opfunc, input, optim_state)
     loss = loss[1]
-    if i % 200 == 0 then
-        optim_state.learningRate = 0.9 * optim_state.learningRate
+    if i % 100 == 0 then
+        optim_state.learningRate = 0.75 * optim_state.learningRate
     end
 
     if i % 10 == 0 then

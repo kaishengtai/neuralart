@@ -30,9 +30,10 @@ The optimization of the generated image is performed on GPU. On a 2014 MacBook P
 Other options:
 
 - `num_iters`: Number of optimization steps.
-- `size`: Long edge dimension of the generated image. Set to 0 to use the size of the content image.
+- `size`: Long edge dimension of the generated image. Set to 0 to use the size of the content image. Default is 500.
 - `nodisplay`: Suppress image display during optimization.
-- `init`: {image, random}. Initialization mode for optimized image. `image` initializes with the content image; `random` initializes with random Gaussian noise.
+- `smoothness`: Constant that controls smoothness of generated image (total variation norm regularization strength). Default is 7.5E-3.
+- `init`: {image, random}. Initialization mode for optimized image. `image` initializes with the content image; `random` initializes with random Gaussian noise. Default is `image`.
 - `backend`: {cunn, cudnn}. Neural network CUDA backend. `cudnn` requires the [Torch bindings](https://github.com/soumith/cudnn.torch/tree/R3) for CuDNN R3.
 
 ## Examples
@@ -76,6 +77,8 @@ The outputs of the following layers are used to optimize for content: `inception
 Optimization of the generated image is performed using SGD with momentum of 0.9. The learning rate is decayed exponentially by 0.9 every 200 iterations.
 
 By default, the optimized image is initialized using the content image; the implementation also works with white noise initialization, as described in the paper.
+
+In order to reduce high-frequency "screen door" noise in the generated image, total variation regularization is applied (idea from [cnn-vis](https://github.com/jcjohnson/cnn-vis) by [jcjohnson](https://github.com/jcjohnson)).
 
 ## Acknowledgements
 
