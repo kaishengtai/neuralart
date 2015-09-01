@@ -50,21 +50,11 @@ And in the style of Edvard Munch's *The Scream*:
 
 [Longer animation](http://gfycat.com/WebbedValuableGreyhounddog)
 
-Half Dome in the style of a Chinese painting:
+Picasso-fied Obama:
 
-![](examples/halfdome.jpg)
+![](examples/picasso_obama_short.gif)
 
-![](examples/chinese_halfdome.jpg)
-
-[Animation](http://gfycat.com/DiscreteSnivelingCod)
-
-Stephen Colbert in the style of the Mona Lisa:
-
-![](examples/colbert.jpg)
-
-![](examples/monalisa-colbert.jpg)
-
-[Animation](http://gfycat.com/GiddyWeirdFlycatcher)
+[Longer animation](http://gfycat.com/WeakPettyDevilfish)
 
 ## Implementation Details
 
