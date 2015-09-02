@@ -29,12 +29,13 @@ The optimization of the generated image is performed on GPU. On a 2014 MacBook P
 
 Other options:
 
-- `num_iters`: Number of optimization steps.
+- `num_iters`: Number of optimization steps. Default is 500.
 - `size`: Long edge dimension of the generated image. Set to 0 to use the size of the content image. Default is 500.
-- `nodisplay`: Suppress image display during optimization.
-- `smoothness`: Constant that controls smoothness of generated image (total variation norm regularization strength). Default is 7.5E-3.
+- `display_interval`: Number of iterations between image displays. Set to 0 to suppress image display. Default is 20.
+- `smoothness`: Constant that controls smoothness of generated image (total variation norm regularization strength). Default is 6E-3.
 - `init`: {image, random}. Initialization mode for optimized image. `image` initializes with the content image; `random` initializes with random Gaussian noise. Default is `image`.
 - `backend`: {cunn, cudnn}. Neural network CUDA backend. `cudnn` requires the [Torch bindings](https://github.com/soumith/cudnn.torch/tree/R3) for CuDNN R3.
+- `optimizer`: {sgd, lbfgs}. Optimization algorithm. `lbfgs` is slower per iteration and consumes more memory, but may yield better results. Default is `sgd`.
 
 ## Examples
 
@@ -64,7 +65,7 @@ The outputs of the following layers are used to optimize for style: `conv1/7x7_s
 
 The outputs of the following layers are used to optimize for content: `inception_3a`, `inception_4a`.
 
-Optimization of the generated image is performed using gradient descent with momentum of 0.9. The learning rate is decayed exponentially by 0.75 every 100 iterations.
+By default, optimization of the generated image is performed using gradient descent with momentum of 0.9. The learning rate is decayed exponentially by 0.75 every 100 iterations. L-BFGS can also be used.
 
 By default, the optimized image is initialized using the content image; the implementation also works with white noise initialization, as described in the paper.
 

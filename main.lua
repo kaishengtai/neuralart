@@ -23,15 +23,16 @@ cmd:text()
 cmd:text('A Neural Algorithm of Artistic Style')
 cmd:text()
 cmd:text('Options:')
-cmd:option('--style',       'none',  'Path to style image')
-cmd:option('--content',     'none',  'Path to content image')
-cmd:option('--style_factor', 5e9,    'Trade-off factor between style and content')
-cmd:option('--num_iters',    500,    'Number of iterations')
-cmd:option('--size',         500,    'Length of image long edge (0 to use original content size)')
-cmd:option('--nodisplay',    false,  'Whether to skip image display during optimization')
-cmd:option('--smoothness',   7.5e-3, 'Total variation norm regularization strength (higher for smoother output)')
-cmd:option('--init',        'image', '{image, random}. Initialization mode for optimized image.')
-cmd:option('--backend',     'cunn',  '{cunn, cudnn}. Neural network CUDA backend.')
+cmd:option('--style',           'none',  'Path to style image')
+cmd:option('--content',         'none',  'Path to content image')
+cmd:option('--style_factor',     5e9,    'Trade-off factor between style and content')
+cmd:option('--num_iters',        500,    'Number of iterations')
+cmd:option('--size',             500,    'Length of image long edge (0 to use original content size)')
+cmd:option('--display_interval', 20,     'Iterations between image displays (0 to suppress display)')
+cmd:option('--smoothness',       6e-3,   'Total variation norm regularization strength (higher for smoother output)')
+cmd:option('--init',            'image', '{image, random}. Initialization mode for optimized image.')
+cmd:option('--backend',         'cunn',  '{cunn, cudnn}. Neural network CUDA backend.')
+cmd:option('--optimizer',       'sgd',   '{sgd, lbfgs}. Optimization algorithm.')
 local opt = cmd:parse(arg)
 if opt.size <= 0 then
     opt.size = nil
@@ -116,40 +117,50 @@ end
 local model = create_model('inception_caffe.th', opt.backend)
 collectgarbage()
 
-local style_layers = {
-    'conv1/7x7_s2',
-    'conv2/3x3',
-    'inception_3a',
-    'inception_3b',
-    'inception_4a',
-    'inception_4b',
-    'inception_4c',
-    'inception_4d',
-    'inception_4e',
+-- choose style and content layers
+local style_weights = {
+    ['conv1/7x7_s2'] = 1,
+    ['conv2/3x3']    = 1,
+    ['inception_3a'] = 1,
+    ['inception_3b'] = 1,
+    ['inception_4a'] = 1,
+    ['inception_4b'] = 1,
+    ['inception_4c'] = 1,
+    ['inception_4d'] = 1,
+    ['inception_4e'] = 1,
 }
 
-local content_layers = {
-    'inception_3a',
-    'inception_4a',
+local content_weights = {
+    ['inception_3a'] = 1,
+    ['inception_4a'] = 1,
 }
 
-local style_index, content_index = {}, {}
-for i, name in ipairs(style_layers) do style_index[name] = true end
-for i, name in ipairs(content_layers) do content_index[name] = true end
+-- compute normalization factor
+local style_weight_sum = 0
+local content_weight_sum = 0
+for k, v in pairs(style_weights) do
+    style_weight_sum = style_weight_sum + v
+end
 
+for k, v in pairs(content_weights) do
+    content_weight_sum = content_weight_sum + v
+end
 
 -- load content image
 local img = preprocess(image.load(opt.content), opt.size):cuda()
 model:forward(img)
-local img_activations, _ = collect_activations(model, content_index, {})
+local img_activations, _ = collect_activations(model, content_weights, {})
 
 -- load style image
-local art = preprocess(image.load(opt.style), math.max(img:size(3), img:size(4))):cuda()
+local art = preprocess(
+    image.load(opt.style), math.max(img:size(3), img:size(4))
+):cuda()
 model:forward(art)
-local _, art_grams = collect_activations(model, {}, style_index)
+local _, art_grams = collect_activations(model, {}, style_weights)
+art = nil
+collectgarbage()
 
 function opfunc(input)
-
     -- forward prop
     model:forward(input)
 
@@ -162,35 +173,31 @@ function opfunc(input)
         local name = module._name
 
         -- add content gradient
-        if name and content_index[name] then
+        if name and content_weights[name] then
             local c_loss, c_grad = content_grad(module.output, img_activations[name])
-            --printf('[content]\t%s\t%.2e\n', name, c_loss)
-            loss = loss + c_loss / #content_layers
-            grad:add(1 / #content_layers, c_grad)
+            local w = content_weights[name] / content_weight_sum
+            --printf('[content]\t%s\t%.2e\n', name, w * c_loss)
+            loss = loss + w * c_loss
+            grad:add(w, c_grad)
         end
 
         -- add style gradient
-        if name and style_index[name] then
+        if name and style_weights[name] then
             local s_loss, s_grad = style_grad(module.output, art_grams[name])
-            --printf('[style]\t%s\t%.2e\n', name, s_loss)
-            loss = loss + opt.style_factor * s_loss / #style_layers
-            grad:add(opt.style_factor / #style_layers, s_grad)
+            local w = opt.style_factor * style_weights[name] / style_weight_sum
+            --printf('[style]\t%s\t%.2e\n', name, w * s_loss)
+            loss = loss + w * s_loss
+            grad:add(w, s_grad)
         end
         grad = module:backward(module_input, grad)
     end
 
     -- total variation regularization for denoising
     grad:add(total_var_grad(input):mul(opt.smoothness))
-    return loss, grad
+    return loss, grad:view(-1)
 end
 
-local optim_state = {
-    learningRate = 0.1,
-    momentum = 0.9,
-    dampening = 0.0,
-}
-
--- optimized image
+-- image to optimize
 local input
 if opt.init == 'image' then
     input = img
@@ -202,10 +209,9 @@ else
     error('unrecognized initialization option: ' .. opt.init)
 end
 
--- optimize
 local timer = torch.Timer()
 local output = depreprocess(input):double()
-if not opt.nodisplay then
+if opt.display_interval > 0 then
     image.display(output)
 end
 
@@ -215,10 +221,31 @@ if not paths.dirp(frames_dir) then
     paths.mkdir(frames_dir)
 end
 image.save(paths.concat(frames_dir, '0.jpg'), output)
+
+-- set optimizer options
+local optim_state
+if opt.optimizer == 'sgd' then
+    optim_state = {
+        learningRate = 0.1,
+        momentum = 0.9,
+        dampening = 0.0,
+    }
+elseif opt.optimizer == 'lbfgs' then
+    optim_state = {
+        maxIter = 3,
+        learningRate = 1,
+    }
+else
+    error('unknown optimizer: ' .. opt.optimizer)
+end
+
+-- optimize
 for i = 1, opt.num_iters do
-    local _, loss = optim.sgd(opfunc, input, optim_state)
+    local _, loss = optim[opt.optimizer](opfunc, input, optim_state)
     loss = loss[1]
-    if i % 100 == 0 then
+
+    -- anneal learning rate
+    if opt.optimizer == 'sgd' and i % 100 == 0 then
         optim_state.learningRate = 0.75 * optim_state.learningRate
     end
 
@@ -229,7 +256,7 @@ for i = 1, opt.num_iters do
 
     if i <= 20 or i % 5 == 0 then
         output = depreprocess(input):double()
-        if not opt.nodisplay and i % 50 == 0 then
+        if opt.display_interval > 0 and i % opt.display_interval == 0 then
             image.display(output)
         end
         image.save(paths.concat(frames_dir, i .. '.jpg'), output)
@@ -237,6 +264,6 @@ for i = 1, opt.num_iters do
 end
 
 output = depreprocess(input)
-if not opt.nodisplay then
+if opt.display_interval > 0 then
     image.display(output)
 end
