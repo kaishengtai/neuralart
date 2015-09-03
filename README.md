@@ -92,3 +92,4 @@ In order to reduce high-frequency "screen door" noise in the generated image (es
 
 The weights for the Inception network used in this implementation were ported to Torch from the publicly-available [Caffe](https://github.com/BVLC/caffe/tree/master/models/bvlc_googlenet) distribution.
 
+Thanks to the [Bethge Group](http://bethgelab.org/deepneuralart/) for providing the weights to the normalized VGG network used here.
