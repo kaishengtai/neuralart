@@ -31,7 +31,7 @@ Basic usage:
 qlua main.lua --style <style.jpg> --content <content.jpg> --style_factor <factor>
 ```
 
-where `style.jpg` is the image that provides the style of the final generated image, and `content.jpg` is the image that provides the content. `style_factor` is a constant that controls the degree to which the generated image emphasizes style over content. By default it is set to 1E9.
+where `style.jpg` is the image that provides the style of the final generated image, and `content.jpg` is the image that provides the content. `style_factor` is a constant that controls the degree to which the generated image emphasizes style over content. By default it is set to 2E9.
 
 This generates an image using the VGG-19 network by Karen Simonyan and Andrew Zisserman (http://www.robots.ox.ac.uk/~vgg/research/very_deep/).
 
@@ -52,6 +52,12 @@ The VGG network with the default L-BFGS optimizer gives the best results. Howeve
 
 ```
 qlua main.lua --style <style.jpg> --content <content.jpg> --model inception --optimizer sgd
+```
+
+You can also try reducing the size of the generated image:
+
+```
+qlua main.lua --style <style.jpg> --content <content.jpg> --size 300
 ```
 
 ## Examples
