@@ -27,7 +27,7 @@ cmd:option('--style_factor',     2e9,     'Trade-off factor between style and co
 cmd:option('--num_iters',        500,     'Number of iterations')
 cmd:option('--size',             500,     'Length of image long edge (0 to use original content size)')
 cmd:option('--display_interval', 20,      'Iterations between image displays (0 to suppress display)')
-cmd:option('--smoothness',       1e-4,    'Total variation norm regularization strength (higher for smoother output)')
+cmd:option('--smoothness',       0,       'Total variation norm regularization strength (higher for smoother output)')
 cmd:option('--init',            'image',  '{image, random}. Initialization mode for optimized image.')
 cmd:option('--backend',         'cunn',   '{cunn, cudnn}. Neural network CUDA backend.')
 cmd:option('--optimizer',       'lbfgs',  '{sgd, lbfgs}. Optimization algorithm.')
