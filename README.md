@@ -17,25 +17,42 @@ luarocks install inn
 
 ## Usage
 
+First, download the models by running the download script:
+
+```
+bash download_models.sh
+```
+
+This downloads the model weights for the VGG and Inception networks.
+
 Basic usage:
 
 ```
 qlua main.lua --style <style.jpg> --content <content.jpg> --style_factor <factor>
 ```
 
-where `style.jpg` is the image that provides the style of the final generated image, and `content.jpg` is the image that provides the content. `style_factor` is a constant that controls the degree to which the generated image emphasizes style over content. By default it is set to 5E9.
+where `style.jpg` is the image that provides the style of the final generated image, and `content.jpg` is the image that provides the content. `style_factor` is a constant that controls the degree to which the generated image emphasizes style over content. By default it is set to 1E9.
 
-The optimization of the generated image is performed on GPU. On a 2014 MacBook Pro with an NVIDIA GeForce GT 750M, it takes a little over 4 minutes to perform 500 iterations of gradient descent.
+This generates an image using the VGG-19 network by Karen Simonyan and Andrew Zisserman (http://www.robots.ox.ac.uk/~vgg/research/very_deep/).
 
 Other options:
 
+- `model`: {inception, vgg}. Convnet model to use. Inception refers to Google's [Inception architecture](http://arxiv.org/abs/1409.4842). Default is VGG.
 - `num_iters`: Number of optimization steps. Default is 500.
 - `size`: Long edge dimension of the generated image. Set to 0 to use the size of the content image. Default is 500.
 - `display_interval`: Number of iterations between image displays. Set to 0 to suppress image display. Default is 20.
-- `smoothness`: Constant that controls smoothness of generated image (total variation norm regularization strength). Default is 6E-3.
+- `smoothness`: Constant that controls smoothness of generated image (total variation norm regularization strength). Default is 1E-4.
 - `init`: {image, random}. Initialization mode for optimized image. `image` initializes with the content image; `random` initializes with random Gaussian noise. Default is `image`.
 - `backend`: {cunn, cudnn}. Neural network CUDA backend. `cudnn` requires the [Torch bindings](https://github.com/soumith/cudnn.torch/tree/R3) for CuDNN R3.
 - `optimizer`: {sgd, lbfgs}. Optimization algorithm. `lbfgs` is slower per iteration and consumes more memory, but may yield better results. Default is `sgd`.
+
+### Out of memory?
+
+The VGG network with the default L-BFGS optimizer gives the best results. However, this setting also requires a lot of GPU memory. If you run into CUDA out-of-memory errors, try running with the Inception architecture or with the SGD optimizer:
+
+```
+qlua main.lua --style <style.jpg> --content <content.jpg> --model inception --optimizer sgd
+```
 
 ## Examples
 
@@ -59,17 +76,13 @@ Picasso-fied Obama:
 
 ## Implementation Details
 
-The primary difference between this implementation and the paper is that it uses Google's Inception architecture instead of VGG. Consequently, the hyperparameter settings differ from those given in the paper (they have been tuned to give aesthetically pleasing results).
-
-The outputs of the following layers are used to optimize for style: `conv1/7x7_s2`, `conv2/3x3`, `inception_3a`, `inception_3b`, `inception_4a`, `inception_4b`, `inception_4c`, `inception_4d`, `inception_4e`.
+When using the Inception network, the outputs of the following layers are used to optimize for style: `conv1/7x7_s2`, `conv2/3x3`, `inception_3a`, `inception_3b`, `inception_4a`, `inception_4b`, `inception_4c`, `inception_4d`, `inception_4e`.
 
 The outputs of the following layers are used to optimize for content: `inception_3a`, `inception_4a`.
 
-By default, optimization of the generated image is performed using gradient descent with momentum of 0.9. The learning rate is decayed exponentially by 0.75 every 100 iterations. L-BFGS can also be used.
-
 By default, the optimized image is initialized using the content image; the implementation also works with white noise initialization, as described in the paper.
 
-In order to reduce high-frequency "screen door" noise in the generated image, total variation regularization is applied (idea from [cnn-vis](https://github.com/jcjohnson/cnn-vis) by [jcjohnson](https://github.com/jcjohnson)).
+In order to reduce high-frequency "screen door" noise in the generated image (especially when using the Inception network), total variation regularization is applied (idea from [cnn-vis](https://github.com/jcjohnson/cnn-vis) by [jcjohnson](https://github.com/jcjohnson)).
 
 ## Acknowledgements
 
