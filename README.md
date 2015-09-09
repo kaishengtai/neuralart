@@ -49,6 +49,7 @@ Other options:
 - `init`: {image, random}. Initialization mode for optimized image. `image` initializes with the content image; `random` initializes with random Gaussian noise. Default is `image`.
 - `backend`: {cunn, cudnn}. Neural network CUDA backend. `cudnn` requires the [Torch bindings](https://github.com/soumith/cudnn.torch/tree/R3) for CuDNN R3.
 - `optimizer`: {sgd, lbfgs}. Optimization algorithm. `lbfgs` is slower per iteration and consumes more memory, but may yield better results. Default is `sgd`.
+- `cpu`: Optimize on CPU instead of GPU (only VGG model supported).
 
 ### Out of memory?
 
@@ -62,6 +63,12 @@ You can also try reducing the size of the generated image:
 
 ```
 qlua main.lua --style <style.jpg> --content <content.jpg> --size 300
+```
+
+If all else fails (or if you don't have a CUDA-compatible GPU), you can optimize on CPU:
+
+```
+qlua main.lua --style <style.jpg> --content <content.jpg> --cpu
 ```
 
 ## Examples
