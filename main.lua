@@ -6,9 +6,7 @@
 --
 
 require 'torch'
-require 'cutorch'
 require 'nn'
-require 'cunn'
 require 'image'
 require 'paths'
 require 'optim'
@@ -35,6 +33,11 @@ cmd:option('--cpu',              false,   'Optimize on CPU (only with VGG networ
 opt = cmd:parse(arg)
 if opt.size <= 0 then
     opt.size = nil
+end
+
+if not opt.cpu then
+    require 'cutorch'
+    require 'cunn'
 end
 
 paths.dofile('models/util.lua')
