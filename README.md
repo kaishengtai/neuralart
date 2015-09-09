@@ -10,8 +10,8 @@ This is a Torch7 implementation of the method described in the paper
 ## Dependencies
 
 - [Torch7](https://github.com/torch/torch7)
-- [imagine-nn](https://github.com/szagoruyko/imagine-nn)
-- CUDA 6.5+
+- [imagine-nn](https://github.com/szagoruyko/imagine-nn) (for Inception network)
+- CUDA 6.5+ (unless running on CPU -- see below)
 
 imagine-nn (and any other Torch packages you're missing) can be installed via Luarocks:
 
