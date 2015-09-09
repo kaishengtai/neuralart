@@ -97,6 +97,5 @@ function create_inception(weights_file, backend)
 
     model = model:subnetwork('inception_4e')
     collectgarbage()
-    model:cuda()
     return model
 end

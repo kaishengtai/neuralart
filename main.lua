@@ -31,6 +31,7 @@ cmd:option('--smoothness',       0,       'Total variation norm regularization s
 cmd:option('--init',            'image',  '{image, random}. Initialization mode for optimized image.')
 cmd:option('--backend',         'cunn',   '{cunn, cudnn}. Neural network CUDA backend.')
 cmd:option('--optimizer',       'lbfgs',  '{sgd, lbfgs}. Optimization algorithm.')
+cmd:option('--cpu',              false,   'Optimize on CPU (only with VGG network).')
 opt = cmd:parse(arg)
 if opt.size <= 0 then
     opt.size = nil
@@ -50,6 +51,10 @@ if opt.model == 'inception' then
         print('ERROR: could not find Inception model weights at ' .. inception_path)
         print('run download_models.sh to download model weights')
         error('')
+    end
+
+    if opt.cpu then
+        error('CPU optimization only works with VGG model')
     end
 elseif opt.model == 'vgg' then
     if not paths.filep(vgg_path) then
@@ -97,6 +102,13 @@ elseif opt.model == 'vgg' then
 
     model = create_vgg(vgg_path, opt.backend)
 end
+
+-- run on GPU
+if opt.cpu then
+    model:float()
+else
+    model:cuda()
+end
 collectgarbage()
 
 -- compute normalization factor
@@ -111,14 +123,20 @@ for k, v in pairs(content_weights) do
 end
 
 -- load content image
-local img = preprocess(image.load(opt.content), opt.size):cuda()
+local img = preprocess(image.load(opt.content), opt.size)
+if not opt.cpu then
+    img = img:cuda()
+end
 model:forward(img)
 local img_activations, _ = collect_activations(model, content_weights, {})
 
 -- load style image
 local art = preprocess(
     image.load(opt.style), math.max(img:size(3), img:size(4))
-):cuda()
+)
+if not opt.cpu then
+    art = art:cuda()
+end
 model:forward(art)
 local _, art_grams = collect_activations(model, {}, style_weights)
 art = nil
@@ -130,7 +148,8 @@ function opfunc(input)
 
     -- backpropagate
     local loss = 0
-    local grad = torch.CudaTensor(model.output:size()):zero()
+    local grad = opt.cpu and torch.FloatTensor() or torch.CudaTensor()
+    grad:resize(model.output:size()):zero()
     for i = #model.modules, 1, -1 do
         local module_input = (i == 1) and input or model.modules[i - 1].output
         local module = model.modules[i]
@@ -168,7 +187,11 @@ if opt.init == 'image' then
 elseif opt.init == 'random' then
     input = preprocess(
         torch.randn(3, img:size(3), img:size(4)):mul(0.1):add(0.5):clamp(0, 1)
-    ):cuda()
+    )
+
+    if not opt.cpu then
+        input = input:cuda()
+    end
 else
     error('unrecognized initialization option: ' .. opt.init)
 end
@@ -190,10 +213,15 @@ image.save(paths.concat(frames_dir, '0.jpg'), output)
 local optim_state
 if opt.optimizer == 'sgd' then
     optim_state = {
-        learningRate = 0.1,
         momentum = 0.9,
         dampening = 0.0,
     }
+
+    if opt.model == 'inception' then
+        optim_state.learningRate = 5e-2
+    else
+        optim_state.learningRate = 1e-3
+    end
 elseif opt.optimizer == 'lbfgs' then
     optim_state = {
         maxIter = 3,

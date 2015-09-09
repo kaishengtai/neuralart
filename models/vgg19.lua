@@ -63,6 +63,5 @@ function create_vgg(weights_file, backend)
     end
 
     collectgarbage()
-    model:cuda()
     return model
 end

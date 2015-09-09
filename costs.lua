@@ -36,7 +36,11 @@ end
 
 local euclidean = nn.MSECriterion()
 euclidean.sizeAverage = false
-euclidean:cuda()
+if opt.cpu then
+    euclidean:float()
+else
+    euclidean:cuda()
+end
 
 function style_grad(gen, orig_gram)
     local k = gen:size(2)
