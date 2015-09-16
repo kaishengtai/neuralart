@@ -30,6 +30,7 @@ cmd:option('--init',            'image',  '{image, random}. Initialization mode 
 cmd:option('--backend',         'cunn',   '{cunn, cudnn}. Neural network CUDA backend.')
 cmd:option('--optimizer',       'lbfgs',  '{sgd, lbfgs}. Optimization algorithm.')
 cmd:option('--cpu',              false,   'Optimize on CPU (only with VGG network).')
+cmd:option('--output_dir',      'frames', 'Output directory to save to.' )
 opt = cmd:parse(arg)
 if opt.size <= 0 then
     opt.size = nil
@@ -206,7 +207,7 @@ if opt.display_interval > 0 then
 end
 
 -- make directory to save intermediate frames
-local frames_dir = 'frames'
+local frames_dir = opt.output_dir
 if not paths.dirp(frames_dir) then
     paths.mkdir(frames_dir)
 end
