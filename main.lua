@@ -211,7 +211,7 @@ local frames_dir = opt.output_dir
 if not paths.dirp(frames_dir) then
     paths.mkdir(frames_dir)
 end
-image.save(paths.concat(frames_dir, '0.jpg'), output)
+image.save(paths.concat(frames_dir, '0000.jpg'), output)
 
 -- set optimizer options
 local optim_state
