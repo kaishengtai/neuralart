@@ -12,6 +12,8 @@ function preprocess(img, scale)
         copy[2] = img[1]
         copy[3] = img[1]
         img = copy
+    elseif img:size(1) == 4 then
+        img = img[{{1,3},{},{}}]
     end
 
     local w, h = img:size(3), img:size(2)
