@@ -1,7 +1,7 @@
 # Implementation of 'A Neural Algorithm of Artistic Style'
 
 This is a Torch7 implementation of the method described in the paper 
-'A Neural Algorthm of Artistic Style' by Leon Gatys, Alexander Ecker, and Matthias Bethge (http://arxiv.org/abs/1508.06576).
+'A Neural Algorithm of Artistic Style' by Leon Gatys, Alexander Ecker, and Matthias Bethge (http://arxiv.org/abs/1508.06576).
 
 ![](examples/starry_eiffel_short.gif)
 
@@ -45,8 +45,8 @@ Other options:
 - `num_iters`: Number of optimization steps. Default is 500.
 - `size`: Long edge dimension of the generated image. Set to 0 to use the size of the content image. Default is 500.
 - `display_interval`: Number of iterations between image displays. Set to 0 to suppress image display. Default is 20.
-- `smoothness`: Constant that controls smoothness of generated image (total variation norm regularization strength). Useful when using Inception model (set to ~5E-3). Default is 0.
-- `init`: {image, random}. Initialization mode for optimized image. `image` initializes with the content image; `random` initializes with random Gaussian noise. Default is `image`.
+- `smoothness`: Constant that controls the smoothness of the generated image (total variation norm regularization strength). Useful when using Inception model (set to ~5E-3). Default is 0.
+- `init`: {image, random}. Initialization mode for the optimized image. `image` initializes with the content image; `random` initializes with random Gaussian noise. Default is `image`.
 - `backend`: {cunn, cudnn}. Neural network CUDA backend. `cudnn` requires the [Torch bindings](https://github.com/soumith/cudnn.torch/tree/R3) for CuDNN R3.
 - `optimizer`: {sgd, lbfgs}. Optimization algorithm. `lbfgs` is slower per iteration and consumes more memory, but may yield better results. Default is `sgd`.
 - `cpu`: Optimize on CPU instead of GPU (only VGG model supported).
