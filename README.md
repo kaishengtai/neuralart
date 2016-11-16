@@ -48,7 +48,7 @@ Other options:
 - `smoothness`: Constant that controls the smoothness of the generated image (total variation norm regularization strength). Useful when using Inception model (set to ~5E-3). Default is 0.
 - `init`: {image, random}. Initialization mode for the optimized image. `image` initializes with the content image; `random` initializes with random Gaussian noise. Default is `image`.
 - `backend`: {cunn, cudnn}. Neural network CUDA backend. `cudnn` requires the [Torch bindings](https://github.com/soumith/cudnn.torch/tree/R3) for CuDNN R3.
-- `optimizer`: {sgd, lbfgs}. Optimization algorithm. `lbfgs` is slower per iteration and consumes more memory, but may yield better results. Default is `sgd`.
+- `optimizer`: {sgd, lbfgs}. Optimization algorithm. `lbfgs` is slower per iteration and consumes more memory, but may yield better results. Default is `lbfgs`.
 - `cpu`: Optimize on CPU instead of GPU (only VGG model supported).
 
 ### Out of memory?
